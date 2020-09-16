@@ -1,2 +1,5 @@
 language: go
-# TODO
+go:
+  -1.15.x
+script:
+  go test ./pkg/pro_guap_scraper/
