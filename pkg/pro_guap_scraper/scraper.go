@@ -3,6 +3,7 @@ package pro_guap_scraper
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
@@ -14,35 +15,39 @@ type User struct{
 	client		http.Client
 }
 
+
 func Tutor(){
 	jar, _ := cookiejar.New(nil)
 	user := User{Name:"Nikita", Pswd:"111261", client:http.Client{Jar:jar}}
 	user.Send(Init, "")
 	user.Send(Auth, "")
-	res, _ := user.Send(GetSubject, "2307331")
+	res, _ := user.Send(Getsubjectsdictionaries, "")
+	fmt.Println(res)
+	fmt.Println("**************************************************************************************************************")
+	res, _ = user.Send(GetSubject, "2307331")
 	fmt.Println(res)
 }
 
+func NewUser(name, pswd string) *User{
+	jar, _ := cookiejar.New(nil)
+	tmp := User{Name:name, Pswd:pswd, client:http.Client{Jar:jar}}
+	return &tmp
+}
 
-func (u *User) Send(f func(*User, string) (*http.Request, error), arg string)(string, error){
+func (u *User) Send(f func(*User, string) (*http.Request, error), arg string)(io.ReadCloser, error){
 	if f == nil{
 		err := fmt.Errorf("NPE, no function")
-		return "", err
+		return nil, err
 	}
 	req, err := f(u, arg)
 	if err != nil{
-		return "", err
+		return nil, err
 	}
 	res, err := u.client.Do(req)
 	if err != nil{
-		return "", err
+		return nil, err
 	}
-	buf := new(bytes.Buffer)
-	_, err = buf.ReadFrom(res.Body)
-	if err != nil{
-		return "", err
-	}
-	return buf.String(), nil
+	return res.Body, nil
 }
 
 func Init(u *User, arg string)(*http.Request, error){
@@ -68,6 +73,7 @@ func Auth(u *User, arg string)(*http.Request, error){
 	return req, nil
 }
 
+// useless function
 func Inside_s(u *User, arg string)(*http.Request, error){
 	req, err := http.NewRequest("GET", "https://pro.guap.ru/inside_s", nil)
 	if err != nil{
